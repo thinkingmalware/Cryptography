@@ -1,0 +1,11 @@
+import string
+import random
+import sys
+
+password = ""
+
+for i in range("1~??? 까지의 임의의 숫자 값"):
+    password = password + random.choice(string.ascii_letters+string.digits+"(@#%%||/()")
+
+
+print("랜덤으로 암호화된 임의의 패스워드  값--",password)
