@@ -16,6 +16,9 @@ cryptography Study
 
 최신암호기술의현황,동향, 응용을파악한다
 
+개념 및 원리. 스터디 자료 
+https://github.com/anti-root/Anti-root-Doc/blob/main/Introduction_to_ecb_cbc_mode_and_ciphertext_stealing.pdf
+
 ** 추천 도서
  *     리버스 엔지니어링
  *         - 리버싱 핵심 원리 - 이승원 (나뭇잎 책)
