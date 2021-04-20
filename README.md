@@ -1,7 +1,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jeongjy0317/Arcalive-Emoji-Downloader.svg)
 # Cryptography
-cryptography Study
+Cryptography Study
 
 암호시스템에 대한 개요, 고전암호시스템의 원리와 동작, 암호 수학이론에 대해 이해한 후 다양한 현대대칭키 암호기술들을 학습한다. 
 또한 최신 암호기술동향을파악할수있도록한다.
