@@ -1,0 +1,137 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <math.h>
+#include <time.h>
+
+
+
+int LFSR(int key, unsigned int fsize);
+
+void main()
+{
+   char fn[100], fn2[100], ckey[100];     // 입력받을 파일명 변수      출력할 파일명 변수      키값 받을 변수
+   int count;                            //  fopen, fwrite 함수 사용시 몇번이나 읽는지 저장할 변수
+   unsigned int binary; 
+   int stream;                          // LFSR 함수가 동작 후 나온 스트림 값을 입력할 변수
+   int key;                            // ckey값이 문자 char형이라 정수 int형으로 바꿔분 값을 저장할 변수
+   float gap;                         //시간 차이 변수
+   time_t startT = 0, endT = 0;      //시간 구하는 변수
+   int fsize;                       //읽어 드린 파일 크기를 담을 변수
+   int i;
+   FILE* fp, *fp2;                 //입력 출력 파일을 각각 담을 포인터 변수
+   char* buffer;                  //동적 메모리를 담을 변수
+
+   //키 , 파일명, 출력 명 입력
+   printf("키를 입력\n");
+   scanf_s("%s", ckey, sizeof(ckey));
+   while (strlen(ckey) != 4 || atoi(ckey) == 0) {      //만약 입력받은 키 값의 길이가 4가 아니거나 키값이 0이면
+      printf("4자리 정수만 입력!\n");
+      scanf_s("%s", ckey, sizeof(ckey));
+   }
+
+   printf("파일 명 입력.\n");
+   scanf_s("%s", fn, sizeof(fn));
+   printf("출력 명 입력\n");
+   scanf_s("%s", fn2, sizeof(fn2));
+
+   //파일 입력
+   fopen_s(&fp, fn, "rb");
+   fopen_s(&fp2, fn2, "wb");              //파일 각각 읽어 드림
+   if (fp == NULL || fp2 == NULL) {      //읽어드린 값들이 NULL이면
+      printf(" 동작중 오류");
+      exit(0);                          //프로그램 종료
+   }
+   //파일 크기
+   fseek(fp, 0, SEEK_END);             //변수 fp에 저장된 파일의 포인터를 파일 끝까지 보냄
+   fsize = ftell(fp);                 //이동된 포인터 횟수를 fsize에 저장
+   rewind(fp);                        //포인터를 원상복구
+
+   //키 난수 
+   startT = clock();                  //시작시간
+   key = atoi(ckey);                  //char형인 ckey값을 int형 key변수에 저장
+   stream = LFSR(key, fsize);         //키 값과 파일 크기 값을 LFSR함수 넣어줌 (LFSR 함수로 이동)
+   endT = clock();                    //시간 종료
+   printf("키스트림 16진수 : ");
+   for (i = 0; i < 4; i++) {          //16진수 출력
+      binary = (char)(stream >> (8 * i));
+      printf("%x", binary);
+   }
+   gap = (float)(endT - startT);      //종료 시간 - 시작시간 을해서 스트림 키 값 구하는 시간을 구함
+
+   //메모리 할당
+   buffer = (char*)malloc(sizeof(char)*fsize);      // char(= 1byte)형 크기 * 파일 크기 만큼  포인터 buffer변수에 저장
+   if (buffer == NULL) {                           //버퍼 크기가 0이면 
+      printf("동작중 오류");
+      exit(0);                                    //프로그램 종료
+   }
+
+   //파일 읽기
+   count = fread(buffer, sizeof(char), fsize, fp);         //fp 데이터를 1byte(= sizeof(char))씩 파일 크기(= fsize)만큼 읽어서 buffer에 저장 시키고 읽은 횟수를 count 변수에 저장
+   if (count == 0) {                                      // 읽은 횟수가 0 이면 (= 파일을 읽지 못하면)
+      printf("동작중 오류");
+      exit(0);                                           //종료
+   }
+
+   // stream 값 평문이랑 XOR	
+   for (i = 0; i < fsize; i++) {            		      //파일 크기만큼 반복
+
+      buffer[i] = buffer[i] ^ (char)(stream >> 8 * i);       //첫번째 버퍼의 1byte와 스트림 키값의 1byte와 XOR연산  반복
+
+   }
+   count = fwrite(buffer, sizeof(char), fsize, fp2);         //buffer에 데이터를 1byte(= sizeof(char))씩 파일 크기(= fsize) 만큼 읽어서 fp2포인터 변수에 저장
+   if (count == 0) {                               	    //못읽었으면
+      printf("동작중 오류");
+      exit(0);                                             //종료
+   }
+   fclose(fp);                           	    // fp 파일 포인터 닫음
+   fclose(fp2);                         	   //fp2 파일 포인터 닫음
+   free(buffer);                                  //동적 메모리 해제
+   printf("\n 키스트림 출력 시간 : %f 초\n완료", gap);
+
+}
+
+int LFSR(int key, unsigned int fsize) {         //키 값이랑 파일 사이즈 가져옴
+   int x = key;
+   int xor;
+   int i;
+
+   for (i = 0; i < fsize; i++) {              //파일 크기만큼 반복
+      x ^= (1 << (x % 31));                  //키값에 31을 나누고 나머지 값 만큼 왼쪽으로 Shift 한 위치의 비트를 0은 1로 1은 0으로 바꿈
+   }
+   for (i = 0; i<fsize; i++) {
+      xor = (((((x >> 31) & 1) ^
+         ((x >> 8) & 1) ^
+         ((x >> 6) & 1) ^
+         ((x >> 4) & 1) ^
+         ((x >> 2) & 1) ^
+         ((x >> 1) & 1) ^
+         (x & 1)) & 1) << 31);
+      x = (x >> 1);
+
+      if (((x >> 31) & 1) != ((xor >> 31) & 1)) {
+         x ^= (1 << 31);
+
+      }
+
+   }
+   for (i = 0; i<fsize; i++) {
+      xor = ((((x >> 31) & 1) ^
+         ((x >> 23) & 1) ^
+         ((x >> 17) & 1) ^
+         ((x >> 13) & 1) ^
+         ((x >> 7) & 1) ^
+         ((x >> 3) & 1) ^
+         (x & 1)) & 1);
+      x = (x >> 1);
+
+      if (((x >> 27) & 1) != xor) {
+         x ^= (1 << 27);
+
+      }
+
+   }
+   return x;                		  //연산 완료 된 키 스트림 값 반환
+
+}
